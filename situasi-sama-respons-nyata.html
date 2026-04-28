@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Situasi Sama: Respons Nyata</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.game-container{width:100%;max-width:480px;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;position:relative;min-height:800px}
+.header{background:linear-gradient(135deg,#4A90D9 0%,#357ABD 100%);padding:20px;color:#fff}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.game-title{font-size:1.3rem;font-weight:700}
+.level-badge{background:rgba(255,255,255,0.2);padding:5px 15px;border-radius:20px;font-size:0.85rem;font-weight:600}
+.stats-bar{display:flex;gap:10px;flex-wrap:wrap}
+.stat-item{background:rgba(255,255,255,0.15);padding:8px 12px;border-radius:12px;font-size:0.75rem;display:flex;align-items:center;gap:5px}
+.mode-selector{display:flex;background:#f8f9fa;padding:5px;margin:15px;border-radius:16px;gap:5px}
+.mode-btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;background:transparent;color:#666}
+.mode-btn.active{background:#4A90D9;color:#fff;box-shadow:0 4px 12px rgba(74,144,217,0.3)}
+.scenario-container{padding:0 15px 15px;overflow-y:auto}
+.scenario-card{background:#fff;border-radius:20px;padding:20px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.08);border:1px solid #e9ecef}
+.scenario-header{display:flex;align-items:center;gap:12px;margin-bottom:15px}
+.platform-icon{width:45px;height:45px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.platform-chat{background:#E3F2FD}.platform-ig{background:#FCE4EC}.platform-dm{background:#F3E5F5}.platform-tiktok{background:#E8F5E9}.platform-twitter{background:#E0F7FA}.platform-wa{background:#FFF3E0}
+.scenario-info h3{font-size:1rem;color:#333;margin-bottom:3px}
+.scenario-info p{font-size:0.8rem;color:#888}
+.difficulty{margin-left:auto;font-size:1.2rem}
+.chat-simulation{background:#f8f9fa;border-radius:16px;padding:15px;margin-bottom:15px}
+.chat-bubble{max-width:80%;padding:12px 16px;border-radius:18px;margin-bottom:10px;font-size:0.9rem;line-height:1.4}
+.chat-bubble.received{background:#fff;border-bottom-left-radius:4px;margin-right:auto;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+.chat-bubble.sent{background:#4A90D9;color:#fff;border-bottom-right-radius:4px;margin-left:auto}
+.chat-bubble.bully{background:#ffebee;color:#c62828;border:1px solid #ffcdd2}
+.chat-bubble.sarcasm{background:#FFF8E1;color:#F57C00;border:1px solid #FFE082}
+.chat-meta{font-size:0.7rem;color:#999;margin-top:5px}
+.response-section{margin-top:15px}
+.section-title{font-size:0.9rem;font-weight:600;color:#555;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.response-options{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}
+.response-btn{padding:14px 16px;border:2px solid #e9ecef;border-radius:14px;background:#fff;text-align:left;font-size:0.9rem;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.response-btn:hover{border-color:#4A90D9;background:#f8fbff;transform:translateX(5px)}
+.response-btn.selected{border-color:#4A90D9;background:#E3F2FD}
+.custom-response{margin-bottom:15px}
+.custom-input{width:100%;padding:14px;border:2px solid #e9ecef;border-radius:14px;font-size:0.9rem;font-family:inherit;resize:none;min-height:80px;transition:border-color 0.2s}
+.custom-input:focus{outline:none;border-color:#4A90D9}
+.custom-input.has-text{border-color:#4A90D9;background:#f8fbff}
+.action-buttons{display:flex;gap:10px;margin-top:15px}
+.action-btn{flex:1;padding:14px;border:none;border-radius:14px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+.btn-primary{background:#4A90D9;color:#fff}
+.btn-primary:hover{background:#357ABD;transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,217,0.3)}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:#f8f9fa;color:#666;border:2px solid #e9ecef}
+.feedback-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:flex-end;z-index:1000}
+.feedback-overlay.show{display:flex}
+.feedback-modal{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:30px 25px;animation:slideUp 0.3s;max-height:80vh;overflow-y:auto}
+.feedback-header{text-align:center;margin-bottom:20px}
+.feedback-icon{font-size:4rem;margin-bottom:10px}
+.feedback-title{font-size:1.3rem;font-weight:700;margin-bottom:5px}
+.feedback-subtitle{color:#888;font-size:0.9rem}
+.score-breakdown{background:#f8f9fa;border-radius:16px;padding:20px;margin-bottom:20px}
+.score-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.score-item:last-child{margin-bottom:0;padding-top:12px;border-top:1px solid #e9ecef;font-weight:700}
+.score-bar{width:100px;height:8px;background:#e9ecef;border-radius:4px;overflow:hidden}
+.score-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
+.feedback-explanation{background:#E3F2FD;border-radius:16px;padding:20px;margin-bottom:20px;border-left:4px solid #4A90D9}
+.feedback-explanation h4{color:#4A90D9;margin-bottom:8px;font-size:0.95rem}
+.feedback-explanation p{color:#555;font-size:0.9rem;line-height:1.5}
+.feedback-actions{display:flex;gap:10px}
+.timer-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fff;padding:10px 25px;border-radius:30px;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:none;align-items:center;gap:10px;z-index:100;font-weight:700;color:#D0021B}
+.timer-container.show{display:flex}
+.timer-bar{width:100px;height:6px;background:#e9ecef;border-radius:3px;overflow:hidden}
+.timer-fill{height:100%;background:#D0021B;border-radius:3px;transition:width 1s linear}
+.coaching-guide{background:linear-gradient(135deg,#FFF8E1 0%,#FFECB3 100%);border-radius:16px;padding:20px;margin-bottom:15px;border:2px solid #FFC107}
+.coaching-step{display:flex;gap:12px;margin-bottom:15px}
+.coaching-step:last-child{margin-bottom:0}
+.step-number{width:30px;height:30px;background:#FFC107;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0}
+.step-content h4{font-size:0.9rem;margin-bottom:3px;color:#333}
+.step-content p{font-size:0.8rem;color:#666}
+.progress-page{display:none;padding:20px}
+.progress-page.active{display:block}
+.progress-header{text-align:center;margin-bottom:25px}
+.avatar-container{width:100px;height:100px;background:linear-gradient(135deg,#4A90D9 0%,#764ba2 100%);border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;font-size:3rem;border:4px solid #fff;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+.player-name{font-size:1.2rem;font-weight:700;color:#333}
+.player-title{color:#4A90D9;font-weight:600;font-size:0.9rem}
+.progress-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:25px}
+.progress-stat-card{background:#fff;border-radius:16px;padding:15px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.progress-stat-value{font-size:1.5rem;font-weight:700;color:#4A90D9}
+.progress-stat-label{font-size:0.75rem;color:#888;margin-top:5px}
+.badges-section{margin-bottom:25px}
+.badges-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+.badge-item{background:#fff;border-radius:16px;padding:15px 10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.05);opacity:0.4;transition:all 0.3s}
+.badge-item.unlocked{opacity:1;transform:scale(1.05)}
+.badge-icon{font-size:2rem;margin-bottom:5px}
+.badge-name{font-size:0.7rem;font-weight:600;color:#555}
+.screenshot-mode{display:none}
+.screenshot-mode.active{display:block}
+.screenshot-upload{border:3px dashed #4A90D9;border-radius:20px;padding:40px 20px;text-align:center;margin-bottom:20px;background:#f8fbff;cursor:pointer;transition:all 0.3s}
+.screenshot-upload:hover{background:#E3F2FD;border-color:#357ABD}
+.screenshot-upload.has-image{border-style:solid;border-color:#7ED321;background:#f1f8e9}
+.upload-icon{font-size:3rem;margin-bottom:10px}
+.screenshot-preview{max-width:100%;max-height:300px;border-radius:12px;margin-top:15px;display:none;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+.screenshot-preview.show{display:block}
+.screenshot-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.screenshot-action-btn{padding:20px;border:2px solid #e9ecef;border-radius:16px;background:#fff;text-align:center;cursor:pointer;transition:all 0.2s}
+.screenshot-action-btn:hover{border-color:#4A90D9;transform:translateY(-3px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.screenshot-action-btn.selected{border-color:#4A90D9;background:#E3F2FD}
+.screenshot-action-btn .action-icon{font-size:2rem;margin-bottom:8px;display:block}
+.screenshot-action-btn .action-label{font-weight:600;font-size:0.9rem;color:#333}
+.screenshot-analysis-result{background:#f8f9fa;border-radius:16px;padding:20px;margin-top:20px;display:none}
+.screenshot-analysis-result.show{display:block;animation:fadeIn 0.5s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.pulse{animation:pulse 2s infinite}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+@media(max-width:480px){.game-container{border-radius:0;max-width:100%;min-height:100vh}body{padding:0}}
+.typing-indicator{display:none;padding:10px 15px;background:#fff;border-radius:18px;margin-bottom:10px;width:fit-content;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+.typing-indicator.show{display:flex;align-items:center;gap:4px}
+.typing-dot{width:8px;height:8px;background:#999;border-radius:50%;animation:typingBounce 1.4s infinite ease-in-out}
+.typing-dot:nth-child(1){animation-delay:0s}
+.typing-dot:nth-child(2){animation-delay:0.2s}
+.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:#333;color:#fff;padding:12px 24px;border-radius:12px;font-size:0.9rem;z-index:2000;opacity:0;transition:all 0.3s}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.scenario-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding:0 5px}
+.scenario-nav-btn{background:#4A90D9;color:#fff;border:none;padding:8px 16px;border-radius:12px;font-size:0.85rem;cursor:pointer;transition:all 0.2s}
+.scenario-nav-btn:hover{background:#357ABD}
+.scenario-nav-btn:disabled{background:#ccc;cursor:not-allowed}
+.scenario-counter{font-size:0.9rem;font-weight:600;color:#555}
+.scenario-category{display:inline-block;padding:4px 12px;border-radius:12px;font-size:0.75rem;font-weight:600;margin-bottom:10px}
+.cat-bully{background:#ffebee;color:#c62828}
+.cat-sarcasm{background:#FFF8E1;color:#F57C00}
+.cat-rumor{background:#F3E5F5;color:#7B1FA2}
+.cat-body{background:#E8F5E9;color:#2E7D32}
+.cat-exclude{background:#E3F2FD;color:#1565C0}
+.cat-dox{background:#fce4ec;color:#c2185b}
+.sent-response{background:#4A90D9;color:#fff;padding:12px 16px;border-radius:18px;margin-bottom:10px;margin-left:auto;max-width:80%;font-size:0.9rem;display:none}
+.sent-response.show{display:block;animation:slideUp 0.3s}
+/* Completed scenario indicator */
+.scenario-nav-btn.completed{background:#7ED321}
+.completed-marker{display:inline-block;width:8px;height:8px;background:#7ED321;border-radius:50%;margin-left:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="header">
+    <div class="header-top">
+      <div class="game-title">🛡️ Situasi Sama: Respons Nyata</div>
+      <div class="level-badge" id="levelBadge">Level 1</div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-item"><span>🧠</span><span id="eqStat">EQ: 75</span></div>
+      <div class="stat-item"><span>🛡️</span><span id="digitalStat">Digital: 60</span></div>
+      <div class="stat-item"><span>⚔️</span><span id="conflictStat">Konflik: 45</span></div>
+      <div class="stat-item"><span>⭐</span><span id="xpStat">XP: 120</span></div>
+    </div>
+  </div>
+
+  <div class="mode-selector">
+    <button class="mode-btn active" onclick="switchMode('story',this)">📖 Cerita</button>
+    <button class="mode-btn" onclick="switchMode('coaching',this)">🎯 Coaching</button>
+    <button class="mode-btn" onclick="switchMode('quick',this)">⚡ Cepat</button>
+    <button class="mode-btn" onclick="switchMode('screenshot',this)">📸 Screenshot</button>
+  </div>
+
+  <!-- Story Mode -->
+  <div id="storyMode" class="scenario-container">
+    <div class="scenario-nav">
+      <button class="scenario-nav-btn" id="prevBtn" onclick="prevScenario()" disabled>← Sebelumnya</button>
+      <span class="scenario-counter" id="scenarioCounter">Skenario 1 / 10</span>
+      <button class="scenario-nav-btn" id="nextBtn" onclick="goNextScenario()">Berikutnya →</button>
+    </div>
+    <div id="scenarioContent"></div>
+  </div>
+
+  <!-- Coaching Mode -->
+  <div id="coachingMode" class="scenario-container" style="display:none">
+    <div class="coaching-guide">
+      <h3 style="margin-bottom:15px;color:#F57C00">🎯 Mode Coaching: Langkah demi Langkah</h3>
+      <div class="coaching-step"><div class="step-number">1</div><div class="step-content"><h4>Identifikasi</h4><p>Apa yang sebenarnya terjadi? Siapa yang terlibat?</p></div></div>
+      <div class="coaching-step"><div class="step-number">2</div><div class="step-content"><h4>Jeda & Napas</h4><p>Ambil waktu 10 detik sebelum merespons. Jangan reaktif!</p></div></div>
+      <div class="coaching-step"><div class="step-number">3</div><div class="step-content"><h4>Evaluasi Pilihan</h4><p>Analisis: Apakah respons ini membantu atau menyakiti?</p></div></div>
+      <div class="coaching-step"><div class="step-number">4</div><div class="step-content"><h4>Praktik & Refleksi</h4><p>Coba respons dan pelajari dari feedback.</p></div></div>
+    </div>
+    <div id="coachingContent"></div>
+  </div>
+
+  <!-- Quick Mode -->
+  <div id="quickMode" class="scenario-container" style="display:none">
+    <div style="text-align:center;padding:40px 20px">
+      <div style="font-size:4rem;margin-bottom:15px">⚡</div>
+      <h2 style="margin-bottom:10px">Mode Reaksi Cepat</h2>
+      <p style="color:#888;margin-bottom:30px">Kamu punya waktu 15 detik untuk merespons setiap situasi!</p>
+      <div style="background:#ffebee;border-radius:16px;padding:20px;margin-bottom:20px">
+        <div style="font-size:3rem;margin-bottom:10px">⏱️</div>
+        <div style="font-size:2rem;font-weight:700;color:#D0021B">15</div>
+        <div style="color:#888">detik tersisa</div>
+      </div>
+      <button class="action-btn btn-primary pulse" style="width:100%" onclick="startQuickMode()">Mulai Tantangan! 🚀</button>
+    </div>
+  </div>
+
+  <!-- Screenshot Mode -->
+  <div id="screenshotMode" class="scenario-container screenshot-mode">
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <div class="platform-icon" style="background:#E8F5E9">📸</div>
+        <div class="scenario-info"><h3>Analisis Screenshot</h3><p>Upload atau pilih screenshot</p></div>
+      </div>
+      <div class="screenshot-upload" id="screenshotUpload" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon" id="uploadIcon">📤</div>
+        <h4 style="margin-bottom:5px" id="uploadTitle">Upload Screenshot</h4>
+        <p style="font-size:0.85rem;color:#888" id="uploadDesc">Klik di sini atau seret file</p>
+        <img class="screenshot-preview" id="screenshotPreview" alt="Preview">
+        <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleFileUpload(event)">
+      </div>
+      <div style="margin-bottom:20px">
+        <h4 style="margin-bottom:10px;font-size:0.9rem">Atau pilih contoh:</h4>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px">
+          <div style="min-width:150px;height:100px;background:#f0f0f0;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent" onclick="loadExampleImage('chat')" onmouseover="this.style.borderColor='#4A90D9'" onmouseout="this.style.borderColor='transparent'"><span style="font-size:2rem">💬</span></div>
+          <div style="min-width:150px;height:100px;background:#f0f0f0;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent" onclick="loadExampleImage('ig')" onmouseover="this.style.borderColor='#4A90D9'" onmouseout="this.style.borderColor='transparent'"><span style="font-size:2rem">📷</span></div>
+          <div style="min-width:150px;height:100px;background:#f0f0f0;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent" onclick="loadExampleImage('dm')" onmouseover="this.style.borderColor='#4A90D9'" onmouseout="this.style.borderColor='transparent'"><span style="font-size:2rem">📱</span></div>
+        </div>
+      </div>
+      <div class="section-title">🎯 Tindakan Apa yang Akan Kamu Ambil?</div>
+      <div class="screenshot-actions">
+        <div class="screenshot-action-btn" id="actionIgnore" onclick="selectScreenshotAction(this,'ignore')"><span class="action-icon">🙈</span><span class="action-label">Abaikan</span></div>
+        <div class="screenshot-action-btn" id="actionReport" onclick="selectScreenshotAction(this,'report')"><span class="action-icon">🚨</span><span class="action-label">Laporkan</span></div>
+        <div class="screenshot-action-btn" id="actionRespond" onclick="selectScreenshotAction(this,'respond')"><span class="action-icon">💬</span><span class="action-label">Respons</span></div>
+        <div class="screenshot-action-btn" id="actionBlock" onclick="selectScreenshotAction(this,'block')"><span class="action-icon">🚫</span><span class="action-label">Blokir</span></div>
+      </div>
+      <button class="action-btn btn-primary" style="width:100%;margin-top:15px" id="analyzeBtn" onclick="analyzeScreenshotAction()" disabled>Analisis Tindakan 🔍</button>
+      <div class="screenshot-analysis-result" id="screenshotAnalysisResult">
+        <h4 style="margin-bottom:10px;color:#4A90D9">📊 Hasil Analisis</h4>
+        <p id="analysisText" style="font-size:0.9rem;line-height:1.5;margin-bottom:15px"></p>
+        <div style="background:#f0f0f0;border-radius:12px;padding:15px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>🛡️ Keamanan Digital</span><span id="analysisScore" style="font-weight:700;color:#4A90D9">+20 XP</span></div>
+          <div style="width:100%;height:8px;background:#e9ecef;border-radius:4px"><div id="analysisBar" style="width:0%;height:100%;background:#7ED321;border-radius:4px;transition:width 0.5s"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Page -->
+  <div id="progressPage" class="progress-page">
+    <div class="progress-header">
+      <div class="avatar-container">🧑‍🎓</div>
+      <div class="player-name">Player 1</div>
+      <div class="player-title" id="playerTitle">🛡️ Pelindung Digital</div>
+    </div>
+    <div class="progress-stats">
+      <div class="progress-stat-card"><div class="progress-stat-value" id="progressEQ">75</div><div class="progress-stat-label">🧠 Kecerdasan Emosional</div></div>
+      <div class="progress-stat-card"><div class="progress-stat-value" id="progressDigital">60</div><div class="progress-stat-label">🛡️ Tanggung Jawab Digital</div></div>
+      <div class="progress-stat-card"><div class="progress-stat-value" id="progressConflict">45</div><div class="progress-stat-label">⚔️ Manajemen Konflik</div></div>
+    </div>
+    <div class="badges-section">
+      <h3 style="font-size:1rem;margin-bottom:5px">🏆 Badge & Achievement</h3>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
+      <h3 style="font-size:1rem;margin-bottom:15px">📈 Progress Level</h3>
+      <div style="margin-bottom:15px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:0.9rem;font-weight:600">Level <span id="progressLevel">1</span> → Level <span id="nextLevel">2</span></span>
+          <span style="font-size:0.85rem;color:#4A90D9"><span id="currentXP">120</span>/300 XP</span>
+        </div>
+        <div style="width:100%;height:10px;background:#e9ecef;border-radius:5px;overflow:hidden">
+          <div id="xpBar" style="width:40%;height:100%;background:linear-gradient(90deg,#4A90D9,#764ba2);border-radius:5px;transition:width 0.5s"></div>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;color:#888">Selesaikan <span id="remainingScenarios">3</span> skenario lagi untuk naik level!</div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
+      <h3 style="font-size:1rem;margin-bottom:15px">📊 Skenario Selesai</h3>
+      <div id="completedList" style="font-size:0.85rem;color:#555;line-height:2"></div>
+    </div>
+    <button class="action-btn btn-secondary" style="width:100%" onclick="backToGame()">← Kembali ke Game</button>
+  </div>
+
+  <div class="timer-container" id="timerContainer"><span>⏱️</span><span id="timerText">15</span><div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div></div>
+  <div class="toast" id="toast"></div>
+
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-modal">
+      <div class="feedback-header">
+        <div class="feedback-icon" id="feedbackIcon">🎉</div>
+        <div class="feedback-title" id="feedbackTitle">Respons Bagus!</div>
+        <div class="feedback-subtitle" id="feedbackSubtitle">Kamu menunjukkan empati dan keberanian</div>
+      </div>
+      <div class="score-breakdown">
+        <div class="score-item"><span>🧠 Kontrol Emosi</span><div style="display:flex;align-items:center;gap:10px"><div class="score-bar"><div class="score-fill" id="scoreEmotion" style="width:0%;background:#7ED321"></div></div><span style="font-weight:700" id="scoreEmotionValue">0</span></div></div>
+        <div class="score-item"><span>💙 Empati</span><div style="display:flex;align-items:center;gap:10px"><div class="score-bar"><div class="score-fill" id="scoreEmpathy" style="width:0%;background:#7ED321"></div></div><span style="font-weight:700" id="scoreEmpathyValue">0</span></div></div>
+        <div class="score-item"><span>💪 Asertivitas</span><div style="display:flex;align-items:center;gap:10px"><div class="score-bar"><div class="score-fill" id="scoreAssertive" style="width:0%;background:#7ED321"></div></div><span style="font-weight:700" id="scoreAssertiveValue">0</span></div></div>
+        <div class="score-item"><span>🛡️ Keamanan Digital</span><div style="display:flex;align-items:center;gap:10px"><div class="score-bar"><div class="score-fill" id="scoreSafety" style="width:0%;background:#F5A623"></div></div><span style="font-weight:700" id="scoreSafetyValue">0</span></div></div>
+        <div class="score-item"><span>⭐ Total Skor</span><span style="font-weight:700;color:#4A90D9;font-size:1.2rem" id="totalScore">0</span></div>
+      </div>
+      <div class="feedback-explanation"><h4>💡 Mengapa Ini Efektif:</h4><p id="feedbackExplanation"></p></div>
+      <div class="feedback-actions">
+        <button class="action-btn btn-secondary" onclick="retryScenario()">🔄 Coba Lagi</button>
+        <button class="action-btn btn-primary" onclick="advanceFromFeedback()">Skenario Berikutnya →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA SKENARIO =====
+const scenarios = [
+  {
+    id:1,category:'bully',categoryLabel:'Bullying Terang-terangan',
+    platform:'chat',platformIcon:'💬',platformName:'Chat Grup Kelas',
+    title:'Ejekan Foto di Grup',difficulty:'⭐',
+    description:'Skenario #1 • Pemula',
+    messages:[
+      {sender:'Rina',text:'Guys, liat deh foto Andi tadi di kantin 🤣',time:'10:30',type:'normal'},
+      {sender:'Budi',text:'Wkwkwk mukanya kaya kena deh 😂😂 Yang lain liat ga sih?',time:'10:31',type:'bully'},
+      {sender:'Santi',text:'Kasian sih, tapi emang lucu wkwk. Share dong ke story!',time:'10:32',type:'bully'},
+      {sender:'Andi',text:'...',time:'10:33 • Dibaca',type:'victim'}
+    ],
+    options:[
+      {id:'A',text:'Wkwkwk iya lucu sih, share dong!',scores:{emotion:20,empathy:10,assertive:30,safety:40},feedback:'Dengan ikut-ikutan menertawakan, kamu justru menjadi bagian dari bullying. Korban akan merasa semakin sendirian.',icon:'⚠️',title:'Hati-hati!',subtitle:'Respons ini memperparah situasi'},
+      {id:'B',text:'Guys, stop. Itu ga lucu, Andi pasti ngerasa malu.',scores:{emotion:90,empathy:95,assertive:85,safety:80},feedback:'Responsmu menunjukkan empati kepada Andi dengan membelanya secara langsung. Kamu tetap tenang tanpa kata-kata kasar. Ini contoh sempurna "upstander"!',icon:'🎉',title:'Respons Luar Biasa!',subtitle:'Kamu adalah Upstander yang berani!'},
+      {id:'C',text:'Diam aja, biarin aja mereka',scores:{emotion:70,empathy:30,assertive:20,safety:60},feedback:'Mengabaikan kadang menghindari konflik, tetapi korban mungkin merasa tidak ada yang peduli. Kadang kita perlu berbicara untuk mendukung yang lemah.',icon:'🤔',title:'Bisa Lebih Baik',subtitle:'Diam bukan selalu emas'},
+      {id:'D',text:'Budi Santi, kalian jahat banget sih!',scores:{emotion:40,empathy:60,assertive:50,safety:50},feedback:'Membela korban itu baik, tetapi menggunakan kata-kata kasar membuatmu turut menyerang. Coba tegaskan tanpa membalas dengan amarah.',icon:'💡',title:'Niatan Baik, Tapi...',subtitle:'Cara penyampaian bisa diperbaiki'}
+    ]
+  },
+  {
+    id:2,category:'sarcasm',categoryLabel:'Sarkasme & Sindiran',
+    platform:'ig',platformIcon:'📷',platformName:'Instagram',
+    title:'Komentar Sarkas di Postingan',difficulty:'⭐⭐',
+    description:'Skenario #2 • Menengah',
+    messages:[
+      {sender:'dewi_s',text:'Proud of my art project! 🎨✨',time:'Baru saja',type:'normal'},
+      {sender:'@toxic_user',text:'Wahhh keren banget yaa 😏👏 Pasti butuh waktu seumur hidup buat bikin kaya gini',time:'2 menit',type:'sarcasm'},
+      {sender:'@random_guy',text:'Iyain aja deh biar dia seneng wkwk',time:'1 menit',type:'sarcasm'},
+      {sender:'@fake_friend',text:'Bagus kok Dewi... *slow clap* 👏',time:'30 detik',type:'sarcasm'}
+    ],
+    options:[
+      {id:'A',text:'Dewi, jangan dengerin mereka. Karyamu bagus kok! 💙',scores:{emotion:85,empathy:95,assertive:80,safety:85},feedback:'Sempurna! Kamu mendukung korban langsung tanpa memperpanjang konflik dengan pelaku. Fokus pada positif adalah strategi terbaik.',icon:'🎉',title:'Respons Empatik!',subtitle:'Kamu membuat korban merasa didukung'},
+      {id:'B',text:'@toxic_user @random_guy, kalian ga punya manners ya?',scores:{emotion:50,empathy:40,assertive:70,safety:60},feedback:'Membela korban itu baik, tetapi menyerang balik pelaku justru memperpanjang konflik. Coba fokus pada dukungan ke korban.',icon:'💡',title:'Tegas, Tapi...',subtitle:'Coba hindari serangan balik'},
+      {id:'C',text:'Iya sih emang biasa aja, ga seberapa',scores:{emotion:20,empathy:15,assertive:30,safety:40},feedback:'Ikut-ikutan merendahkan karya korban? Ini sama saja mendukung bullying. Setiap karya layak dihargai.',icon:'⚠️',title:'Jangan Ikut-ikutan!',subtitle:'Ini melukai perasaan korban'},
+      {id:'D',text:'Like aja postingannya biar dia seneng',scores:{emotion:60,empathy:50,assertive:30,safety:70},feedback:'Like postingan itu baik, tetapi korban masih butuh dukungan verbal. Kadang kata-kata lebih bermakna daripada sekadar like.',icon:'🤔',title:'Kurang Tegas',subtitle:'Coba berikan dukungan yang lebih jelas'}
+    ]
+  },
+  {
+    id:3,category:'rumor',categoryLabel:'Penyebaran Rumor',
+    platform:'wa',platformIcon:'📱',platformName:'WhatsApp Status',
+    title:'Rumor Palsu Menyebar',difficulty:'⭐⭐⭐',
+    description:'Skenario #3 • Sulit',
+    messages:[
+      {sender:'Status dari Rina',text:'📢 INFO PENTING! Katanya Mira pernah ditangkap polisi gara-gara narkoba! Share biar temen-temen tau! ⚠️',time:'5 menit lalu',type:'rumor'},
+      {sender:'Status dari Budi',text:'Wah parah sih kalo bener. Share guys! 🔄',time:'3 menit lalu',type:'rumor'},
+      {sender:'Status dari Santi',text:'Ga kaget sih, emang kelakuannya aneh 😏',time:'2 menit lalu',type:'rumor'}
+    ],
+    options:[
+      {id:'A',text:'Share juga status ini biar yang lain tau',scores:{emotion:15,empathy:10,assertive:20,safety:20},feedback:'Menyebar rumor tanpa bukti adalah cyberbullying dan bisa berakibat hukum. Jangan pernah jadi bagian dari penyebaran informasi palsu!',icon:'❌',title:'Sangat Berbahaya!',subtitle:'Ini bisa merusak reputasi seseorang'},
+      {id:'B',text:'Guys, stop share. Ini rumor ga jelas, ga ada bukti.',scores:{emotion:90,empathy:85,assertive:95,safety:95},feedback:'Hebat! Kamu berani menghentikan penyebaran rumor dan melindungi reputasi seseorang. Ini contoh tanggung jawab digital yang tinggi.',icon:'🎉',title:'Pahlawan Digital!',subtitle:'Kamu melindungi reputasi orang lain'},
+      {id:'C',text:'Kalo bener sih parah, tapi kalo hoax jangan disebar',scores:{emotion:60,empathy:50,assertive:60,safety:70},feedback:'Hati-hati dengan kata "kalo bener" — ini masih memberikan ruang bagi rumor untuk dipercaya. Lebih baik tegas menolak tanpa syarat.',icon:'🤔',title:'Hampir Tepat',subtitle:'Tapi masih ada keraguan'},
+      {id:'D',text:'DM Mira aja biar dia tau',scores:{emotion:70,empathy:75,assertive:50,safety:80},feedback:'Memberitahu korban itu baik, tetapi tidak menghentikan rumor yang tersebar. Lebih baik tegaskan di publik agar yang lain berhenti share.',icon:'💡',title:'Kurang Lengkap',subtitle:'Coba hentikan rumor di sumbernya'}
+    ]
+  },
+  {
+    id:4,category:'body',categoryLabel:'Body Shaming',
+    platform:'tiktok',platformIcon:'🎵',platformName:'TikTok Comments',
+    title:'Body Shaming di Kolom Komentar',difficulty:'⭐⭐',
+    description:'Skenario #4 • Menengah',
+    messages:[
+      {sender:'@fitri_dance',text:'New dance cover! 💃✨ Jangan lupa like dan follow ya!',time:'Baru saja',type:'normal'},
+      {sender:'@bodyshamer_1',text:'Gendut banget sih, goyangnya kaya gajah 😂',time:'2 menit',type:'bully'},
+      {sender:'@bodyshamer_2',text:'Kalo kurus dikit mungkin bagus, ini mah... 🤢',time:'1 menit',type:'bully'},
+      {sender:'@random_viewer',text:'Iyain aja, emang keliatan 100kg+ wkwk',time:'30 detik',type:'bully'}
+    ],
+    options:[
+      {id:'A',text:'Fitri, jangan dengerin mereka. Dance kamu keren! 💪',scores:{emotion:90,empathy:95,assertive:85,safety:85},feedback:'Luar biasa! Kamu mendukung korban langsung dan mengalihkan fokus ke talentanya, bukan penampilannya. Body shaming tidak perlu ditolerir!',icon:'🎉',title:'Respons Sempurna!',subtitle:'Kamu melawan body shaming dengan elegan'},
+      {id:'B',text:'@bodyshamer_1 @bodyshamer_2, kalian semua jelek juga kok!',scores:{emotion:30,empathy:20,assertive:60,safety:40},feedback:'Membalas dengan body shaming juga? Kamu justru melakukan hal yang sama. Melawan kebencian dengan kebencian bukan solusi.',icon:'⚠️',title:'Jangan Turut Menyerang!',subtitle:'Ini memperburuk situasi'},
+      {id:'C',text:'Mending diet dulu deh kalo mau dance',scores:{emotion:15,empathy:10,assertive:30,safety:30},feedback:'Ini adalah body shaming! Menyarankan diet dengan cara menghina adalah bentuk bullying. Setiap orang berhak mengekspresikan diri.',icon:'❌',title:'Ini Juga Bullying!',subtitle:'Jangan pernah body shame orang lain'},
+      {id:'D',text:'Report komennya aja, ga usah ribut',scores:{emotion:70,empathy:60,assertive:50,safety:85},feedback:'Melaporkan itu baik, tetapi korban juga butuh dukungan langsung. Kombinasikan laporan dengan kata-kata positif untuk korban.',icon:'💡',title:'Bagus, Tapi Bisa Lebih',subtitle:'Tambahkan dukungan untuk korban'}
+    ]
+  },
+  {
+    id:5,category:'exclude',categoryLabel:'Eksklusi Sosial',
+    platform:'chat',platformIcon:'💬',platformName:'Grup Chat Teman',
+    title:'Dikecualikan dari Grup',difficulty:'⭐⭐⭐',
+    description:'Skenario #5 • Sulit',
+    messages:[
+      {sender:'Budi',text:'Besok kita hangout di mall ya! 🛍️',time:'14:00',type:'normal'},
+      {sender:'Santi',text:'Iyaa! Jangan kasih tau Rina ya, dia bikin suasana jadi awkward 😅',time:'14:01',type:'bully'},
+      {sender:'Andi',text:'Iya sih, dia tuh aneh. Mending kita aja',time:'14:02',type:'bully'},
+      {sender:'Rina (di grup lain)',text:'Guys, besok kita ga ada acara kan? Kok pada diem semua 🤔',time:'14:30',type:'victim'}
+    ],
+    options:[
+      {id:'A',text:'Rina, besok kita hangout di mall jam 3. Mau ikut?',scores:{emotion:85,empathy:90,assertive:85,safety:80},feedback:'Sempurna! Kamu memasukkan korban kembali dan menunjukkan inklusivitas. Eksklusi sosial sangat menyakitkan, dan kamu berhasil menghentikannya.',icon:'🎉',title:'Pahlawan Inklusi!',subtitle:'Kamu melawan eksklusi sosial'},
+      {id:'B',text:'Guys, jangan gitu dong. Rina juga temen kita.',scores:{emotion:80,empathy:85,assertive:80,safety:75},feedback:'Bagus! Kamu menegur teman-temanmu dan membela Rina. Ini menunjukkan keberanian untuk melawan peer pressure.',icon:'💡',title:'Tegas dan Bijak',subtitle:'Kamu membela yang dikecualikan'},
+      {id:'C',text:'Biarin aja, emang Rina aneh sih',scores:{emotion:20,empathy:10,assertive:30,safety:40},feedback:'Ikut-ikutan mengecualikan teman? Ini adalah bullying sosial yang sangat menyakitkan. Setiap orang berhak diperlakukan dengan baik.',icon:'⚠️',title:'Jangan Ikut-ikutan!',subtitle:'Eksklusi itu menyakitkan'},
+      {id:'D',text:'Diam aja, urusan mereka',scores:{emotion:50,empathy:30,assertive:20,safety:60},feedback:'Diam saat melihat eksklusi berarti kamu setuju dengan perilaku itu. Korban butuh seseorang yang berbicara untuknya.',icon:'🤔',title:'Bisa Lebih Baik',subtitle:'Jangan jadi penonton saja'}
+    ]
+  },
+  {
+    id:6,category:'dox',categoryLabel:'Doxing & Privasi',
+    platform:'twitter',platformIcon:'🐦',platformName:'Twitter/X',
+    title:'Bocornya Data Pribadi',difficulty:'⭐⭐⭐⭐',
+    description:'Skenario #6 • Expert',
+    messages:[
+      {sender:'@anon_hacker',text:'🚨 LEAK ALERT 🚨\nNama: Mira Andini\nAlamat: Jl. Mawar No. 123\nNo HP: 0812-xxxx-xxxx\nIni dia orang yang suka jelekin orang di belakang! RT biar viral! 🔥',time:'10 menit lalu',type:'bully'},
+      {sender:'@netizen_1',text:'Wah parah sih, share biar dia tau rasa!',time:'8 menit',type:'bully'},
+      {sender:'@netizen_2',text:'Sudah ku share ke 5 grup WA 👍',time:'5 menit',type:'bully'}
+    ],
+    options:[
+      {id:'A',text:'Share juga biar dia kapok!',scores:{emotion:10,empathy:5,assertive:20,safety:10},feedback:'Doxing adalah KEJAHATAN! Menyebar data pribadi seseorang bisa berakibat hukum pidana. Jangan pernah ikut-ikutan!',icon:'❌',title:'INI BERBAHAYA!',subtitle:'Doxing adalah kejahatan serius'},
+      {id:'B',text:'Stop! Ini doxing, melanggar privasi. Hapus tweet ini!',scores:{emotion:90,empathy:85,assertive:95,safety:95},feedback:'Hebat! Kamu mengenali doxing dan berani menegur. Melindungi privasi orang adalah tanggung jawab digital yang sangat penting.',icon:'🎉',title:'Pahlawan Privasi!',subtitle:'Kamu melindungi data pribadi orang'},
+      {id:'C',text:'Report tweet ini dan DM Mira untuk waspada',scores:{emotion:85,empathy:90,assertive:80,safety:95},feedback:'Sangat baik! Kamu mengambil tindakan konkret dengan melaporkan dan memberitahu korban. Ini kombinasi sempurna antara aksi dan empati.',icon:'🛡️',title:'Tindakan Tepat!',subtitle:'Kamu melindungi korban secara proaktif'},
+      {id:'D',text:'Kasih tau Mira aja biar dia ganti nomor',scores:{emotion:70,empathy:75,assertive:50,safety:70},feedback:'Memberitahu korban itu baik, tetapi tidak menghentikan pelaku. Lebih baik laporkan juga agar konten dihapus dan pelaku dihentikan.',icon:'💡',title:'Kurang Lengkap',subtitle:'Laporkan juga ke platform'}
+    ]
+  },
+  {
+    id:7,category:'sarcasm',categoryLabel:'Sarkasme Halus',
+    platform:'ig',platformIcon:'📷',platformName:'Instagram Story',
+    title:'Sindiran di Story',difficulty:'⭐⭐',
+    description:'Skenario #7 • Menengah',
+    messages:[
+      {sender:'Story dari @fashion_queen',text:'Pake baju thrift shop terus bilang fashionista? Cute 💖✨ #justsaying #nofilter',time:'20 menit lalu',type:'sarcasm'},
+      {sender:'Story dari @followers_1',text:'Tag temenmu yang suka pamer baju murah wkwk 😂',time:'15 menit',type:'sarcasm'},
+      {sender:'Story dari @followers_2',text:'Savage banget sih queen 👏👏',time:'10 menit',type:'sarcasm'}
+    ],
+    options:[
+      {id:'A',text:'Fashion itu soal gaya, bukan harga. Thrift shop juga bisa keren! 💚',scores:{emotion:85,empathy:90,assertive:80,safety:85},feedback:'Bagus! Kamu mengalihkan fokus dari harga ke nilai fashion sebenarnya tanpa menyerang balik. Ini respons yang dewasa.',icon:'💡',title:'Respons Dewasa!',subtitle:'Kamu mengedukasi tanpa menyerang'},
+      {id:'B',text:'@fashion_queen, kamu jahat banget sih. Ga semua orang kaya!',scores:{emotion:50,empathy:70,assertive:60,safety:60},feedback:'Membela korban itu baik, tetapi menyerang balik dengan "jahat" justru memperpanjang konflik. Coba fokus pada pesan positif.',icon:'🤔',title:'Hampir Tepat',subtitle:'Kurangi kata-kata serangan'},
+      {id:'C',text:'Share storynya biar dia malu',scores:{emotion:20,empathy:15,assertive:40,safety:30},feedback:'Mempermalukan orang lain? Ini justru memperburuk situasi. Melawan kebencian dengan kebencian bukan solusi.',icon:'⚠️',title:'Jangan Mempermalukan!',subtitle:'Ini memperburuk konflik'},
+      {id:'D',text:'Swipe aja, ga usah diurus',scores:{emotion:60,empathy:40,assertive:20,safety:70},feedback:'Mengabaikan bisa menghindari drama, tetapi korban butuh dukungan. Kadang satu komentar positif bisa mengubah segalanya.',icon:'🤔',title:'Kurang Peduli',subtitle:'Korban butuh dukunganmu'}
+    ]
+  },
+  {
+    id:8,category:'bully',categoryLabel:'Cyberbullying Berkelompok',
+    platform:'chat',platformIcon:'💬',platformName:'Discord Server',
+    title:'Serangan Berkelompok',difficulty:'⭐⭐⭐⭐',
+    description:'Skenario #8 • Expert',
+    messages:[
+      {sender:'Mod_Server',text:'Welcome @newbie_gamer! 🎮',time:'16:00',type:'normal'},
+      {sender:'Veteran_1',text:'Lol, rank bronze mau join clan kita? 😂 Pergi sana main candy crush',time:'16:01',type:'bully'},
+      {sender:'Veteran_2',text:'Wkwk savage. Emang sih, kita ga butuh noob',time:'16:02',type:'bully'},
+      {sender:'Veteran_3',text:'Kick aja deh, ntar nge-drag rank kita',time:'16:03',type:'bully'},
+      {sender:'newbie_gamer',text:'Maaf, aku baru belajar. Bisa diajarin ga? 🥺',time:'16:05',type:'victim'}
+    ],
+    options:[
+      {id:'A',text:'Guys, stop. Kita semua pernah jadi newbie. Aku bisa bantu dia belajar!',scores:{emotion:90,empathy:95,assertive:90,safety:85},feedback:'Luar biasa! Kamu tidak hanya menghentikan bullying, tetapi juga menawarkan solusi konstruktif. Ini contoh kepemimpinan digital yang positif.',icon:'🎉',title:'Leader Positif!',subtitle:'Kamu mengubah toxic jadi konstruktif'},
+      {id:'B',text:'@newbie_gamer, jangan dengerin mereka. Aku bisa diajarin bareng!',scores:{emotion:85,empathy:95,assertive:75,safety:80},feedback:'Sempurna! Kamu mendukung korban langsung dan menawarkan bantuan. Ini membuat korban merasa diterima dan tidak sendirian.',icon:'💙',title:'Temen Sejati!',subtitle:'Kamu membuat korban merasa diterima'},
+      {id:'C',text:'Wkwk iya sih, bronze mah cupu',scores:{emotion:15,empathy:10,assertive:30,safety:35},feedback:'Ikut-ikutan mengejek? Kamu menjadi bagian dari toxic community. Setiap pemain berhak belajar dan berkembang.',icon:'⚠️',title:'Jangan Jadi Toxic!',subtitle:'Ini merusak komunitas'},
+      {id:'D',text:'DM admin aja biar diurus',scores:{emotion:60,empathy:50,assertive:40,safety:75},feedback:'Melaporkan ke admin itu baik, tetapi korban butuh dukungan langsung saat itu juga. Kombinasikan dengan kata-kata positif.',icon:'💡',title:'Kurang Langsung',subtitle:'Korban butuh dukungan sekarang'}
+    ]
+  },
+  {
+    id:9,category:'rumor',categoryLabel:'Fitnah di Grup Ortu',
+    platform:'wa',platformIcon:'📱',platformName:'WhatsApp Grup',
+    title:'Fitnah di Komunitas',difficulty:'⭐⭐⭐⭐',
+    description:'Skenario #9 • Expert',
+    messages:[
+      {sender:'Ibu RT',text:'⚠️ PERHATIAN ORANG TUA ⚠️\nKatanya anak Bu Sari (Kelas 10) hamil di luar nikah! Hati-hati ya jangan sampai anak kita berteman dengan dia!',time:'1 jam lalu',type:'rumor'},
+      {sender:'Ibu Wati',text:'Astagfirullah, parah banget. Share ke grup lain ya!',time:'50 menit',type:'rumor'},
+      {sender:'Ibu Rini',text:'Ga heran sih, emang keluarganya ga bener',time:'30 menit',type:'rumor'}
+    ],
+    options:[
+      {id:'A',text:'Share ke grup lain biar pada tau',scores:{emotion:10,empathy:5,assertive:15,safety:15},feedback:'Menyebar fitnah tentang anak di bawah umur sangat berbahaya dan bisa berakibat hukum. Ini juga merusak masa depan seseorang!',icon:'❌',title:'SANGAT BERBAHAYA!',subtitle:'Ini bisa menghancurkan masa depan seseorang'},
+      {id:'B',text:'Bu, ini fitnah. Jangan sebar info ga jelas tentang anak orang!',scores:{emotion:90,empathy:85,assertive:95,safety:90},feedback:'Berani sekali! Kamu melawan fitnah di komunitas yang biasanya sulit dihadapi. Ini menunjukkan integritas dan keberanian moral.',icon:'🎉',title:'Pejuang Kebenaran!',subtitle:'Kamu melawan fitnah dengan berani'},
+      {id:'C',text:'DM Bu Sari aja biar dia tau',scores:{emotion:70,empathy:75,assertive:50,safety:75},feedback:'Memberitahu korban itu baik, tetapi fitnah masih tersebar. Lebih baik tegaskan di grup agar yang lain berhenti menyebarkan.',icon:'💡',title:'Kurang Tegas',subtitle:'Hentikan fitnah di sumbernya'},
+      {id:'D',text:'Diam aja, jangan ikut campur urusan orang',scores:{emotion:40,empathy:30,assertive:20,safety:60},feedback:'Diam saat melihat fitnah berarti membiarkan kejahatan terjadi. Korban butuh seseorang yang berani berbicara kebenaran.',icon:'🤔',title:'Jangan Diam Saja',subtitle:'Korban butuh pembela'}
+    ]
+  },
+  {
+    id:10,category:'bully',categoryLabel:'Intimidasi & Ancaman',
+    platform:'dm',platformIcon:'📩',platformName:'DM Instagram',
+    title:'Ancaman Pribadi',difficulty:'⭐⭐⭐⭐⭐',
+    description:'Skenario #10 • Master',
+    messages:[
+      {sender:'Anonim',text:'Halo wahai anak baik-baik 😈',time:'22:00',type:'bully'},
+      {sender:'Anonim',text:'Besok hati-hati ya pulang sekolah. Aku tau rumahmu di mana 🏠',time:'22:01',type:'bully'},
+      {sender:'Anonim',text:'Kalo ga mau kenapa-kenapa, transfer 500rb ke rekening ini. Jangan lapor polisi ya 😊',time:'22:03',type:'bully'},
+      {sender:'Kamu',text:'...',time:'22:05',type:'victim'}
+    ],
+    options:[
+      {id:'A',text:'Transfer aja biar aman',scores:{emotion:20,empathy:10,assertive:15,safety:25},feedback:'Jangan pernah menyerah pada ancaman! Transfer uang justru membuat pelaku semakin berani. Ini adalah pemerasan digital!',icon:'⚠️',title:'Jangan Menyerah!',subtitle:'Ini memperburuk situasi'},
+      {id:'B',text:'Screenshot semua chat dan lapor ke polisi!',scores:{emotion:85,empathy:80,assertive:95,safety:95},feedback:'Tepat! Ancaman dan pemerasan adalah kejahatan serius. Screenshot sebagai bukti dan lapor ke polisi adalah langkah paling tepat.',icon:'🎉',title:'Tindakan Tepat!',subtitle:'Kamu melindungi diri dengan benar'},
+      {id:'C',text:'Blokir akunnya dan kasih tau orang tua',scores:{emotion:80,empathy:75,assertive:70,safety:90},feedback:'Bagus! Memblokir dan memberitahu orang dewasa adalah langkah yang sangat tepat. Jangan hadapi ancaman sendirian.',icon:'🛡️',title:'Protektif!',subtitle:'Kamu mencari bantuan yang tepat'},
+      {id:'D',text:'Balas ancaman: Aku juga tau rumahmu!',scores:{emotion:30,empathy:20,assertive:60,safety:30},feedback:'Membalas ancaman dengan ancaman sangat berbahaya! Ini bisa memicu konflik fisik. Jangan turuti emosi, cari bantuan profesional.',icon:'❌',title:'Jangan Membalas!',subtitle:'Ini sangat berbahaya'}
+    ]
+  }
+];
+
+// ===== GAME STATE =====
+let currentMode = 'story';
+let currentScenario = 0;
+let selectedResponse = null;
+let customText = '';
+let timerInterval = null;
+let timeLeft = 15;
+let playerStats = {eq:75, digital:60, conflict:45, xp:120, level:1};
+let screenshotUploaded = false;
+let screenshotActionSelected = null;
+let unlockedBadges = ['calm','empathy','speed'];
+// FIX #3: track completed scenarios to prevent XP farming
+let completedScenarios = new Set();
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', function() {
+  renderScenario(0);
+  renderCoachingScenario(0);
+  renderBadges();
+  updateProgressUI();
+});
+
+// ===== RENDER SCENARIO =====
+function renderScenario(index) {
+  const s = scenarios[index];
+  const content = document.getElementById('scenarioContent');
+
+  let messagesHTML = '';
+  s.messages.forEach(m => {
+    let bubbleClass = 'received';
+    if (m.type === 'bully' || m.type === 'rumor') bubbleClass = 'received bully';
+    else if (m.type === 'sarcasm') bubbleClass = 'received sarcasm';
+    messagesHTML += `<div class="chat-bubble ${bubbleClass}"><strong>${m.sender}:</strong> ${m.text}<div class="chat-meta">${m.time}</div></div>`;
+  });
+
+  let optionsHTML = '';
+  s.options.forEach(opt => {
+    optionsHTML += `<button class="response-btn" onclick="selectResponse(this,'${opt.id}')">${opt.text}</button>`;
+  });
+
+  const isCompleted = completedScenarios.has(index);
+
+  content.innerHTML = `
+  <div class="scenario-card">
+    <div class="scenario-header">
+      <div class="platform-icon platform-${s.platform}">${s.platformIcon}</div>
+      <div class="scenario-info">
+        <h3>${s.title}</h3>
+        <p>${s.description}</p>
+      </div>
+      <div class="difficulty">${s.difficulty}</div>
+    </div>
+    <span class="scenario-category cat-${s.category}">${s.categoryLabel}</span>
+    <div class="chat-simulation">
+      ${messagesHTML}
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="sent-response" id="sentResponse"></div>
+    </div>
+    <div class="response-section">
+      <div class="section-title">🤔 Pilih Responsmu:</div>
+      <div class="response-options">${optionsHTML}</div>
+      <div class="section-title">✍️ Atau Tulis Respons Sendiri:</div>
+      <div class="custom-response">
+        <textarea class="custom-input" id="customInput" placeholder="Tulis responsmu di sini..." oninput="handleCustomInput(this)"></textarea>
+      </div>
+      <div class="action-buttons">
+        <button class="action-btn btn-secondary" onclick="showProgress()">📊 Progress</button>
+        <button class="action-btn btn-primary" id="submitBtn" onclick="submitResponse()">Kirim Respons ✅</button>
+      </div>
+      ${isCompleted ? '<div style="text-align:center;margin-top:8px;font-size:0.8rem;color:#7ED321">✅ Skenario ini sudah selesai</div>' : ''}
+    </div>
+  </div>`;
+
+  document.getElementById('scenarioCounter').textContent = `Skenario ${index + 1} / ${scenarios.length}`;
+  document.getElementById('prevBtn').disabled = index === 0;
+  document.getElementById('nextBtn').disabled = index === scenarios.length - 1;
+}
+
+// ===== RENDER COACHING SCENARIO =====
+function renderCoachingScenario(index) {
+  const s = scenarios[index];
+  const content = document.getElementById('coachingContent');
+  if (!content) return;
+
+  let messagesHTML = '';
+  s.messages.forEach(m => {
+    let bubbleClass = 'received';
+    if (m.type === 'bully' || m.type === 'rumor') bubbleClass = 'received bully';
+    else if (m.type === 'sarcasm') bubbleClass = 'received sarcasm';
+    messagesHTML += `<div class="chat-bubble ${bubbleClass}"><strong>${m.sender}:</strong> ${m.text}</div>`;
+  });
+
+  let optionsHTML = '';
+  s.options.forEach(opt => {
+    optionsHTML += `<button class="response-btn" onclick="selectResponse(this,'${opt.id}')">${opt.text}</button>`;
+  });
+
+  content.innerHTML = `
+  <div class="scenario-card">
+    <div class="scenario-header">
+      <div class="platform-icon platform-${s.platform}">${s.platformIcon}</div>
+      <div class="scenario-info"><h3>${s.title}</h3><p>Coaching Mode</p></div>
+    </div>
+    <div class="chat-simulation">${messagesHTML}</div>
+    <div style="background:#FFF3E0;border-radius:12px;padding:15px;margin-bottom:15px;border-left:4px solid #FF9800">
+      <strong>💡 Petunjuk Coaching:</strong>
+      <p style="margin-top:5px;font-size:0.9rem">Perhatikan jenis bullying: <strong>${s.categoryLabel}</strong>. Respons terbaik akan menunjukkan empati, tetap tenang, dan melindungi korban tanpa memperpanjang konflik.</p>
+    </div>
+    <div class="response-section">
+      <div class="response-options">${optionsHTML}</div>
+      <button class="action-btn btn-primary" style="width:100%" onclick="submitCoachingResponse()">Cek Jawaban ✅</button>
+    </div>
+  </div>`;
+}
+
+// ===== MODE SWITCHING (FIX #1 + #2: clear timer & selectedResponse on switch) =====
+function switchMode(mode, btn) {
+  // FIX: clear timer before switching modes
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  document.getElementById('timerContainer').classList.remove('show');
+
+  // FIX: reset selection state on mode switch
+  selectedResponse = null;
+  customText = '';
+
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  document.getElementById('storyMode').style.display = 'none';
+  document.getElementById('coachingMode').style.display = 'none';
+  document.getElementById('quickMode').style.display = 'none';
+  document.getElementById('screenshotMode').style.display = 'none';
+  document.getElementById('progressPage').classList.remove('active');
+
+  if (mode === 'story') {
+    document.getElementById('storyMode').style.display = 'block';
+    renderScenario(currentScenario);
+  } else if (mode === 'coaching') {
+    document.getElementById('coachingMode').style.display = 'block';
+    renderCoachingScenario(currentScenario);
+  } else if (mode === 'quick') {
+    document.getElementById('quickMode').style.display = 'block';
+    document.getElementById('quickMode').innerHTML = `
+    <div style="text-align:center;padding:40px 20px">
+      <div style="font-size:4rem;margin-bottom:15px">⚡</div>
+      <h2 style="margin-bottom:10px">Mode Reaksi Cepat</h2>
+      <p style="color:#888;margin-bottom:30px">Kamu punya waktu 15 detik untuk merespons setiap situasi!</p>
+      <div style="background:#ffebee;border-radius:16px;padding:20px;margin-bottom:20px">
+        <div style="font-size:3rem;margin-bottom:10px">⏱️</div>
+        <div style="font-size:2rem;font-weight:700;color:#D0021B">15</div>
+        <div style="color:#888">detik tersisa</div>
+      </div>
+      <button class="action-btn btn-primary pulse" style="width:100%" onclick="startQuickMode()">Mulai Tantangan! 🚀</button>
+    </div>`;
+  } else if (mode === 'screenshot') {
+    document.getElementById('screenshotMode').style.display = 'block';
+    document.getElementById('screenshotMode').classList.add('active');
+  }
+}
+
+// ===== NAVIGATION (only nav buttons — FIX #1: renamed from nextScenario) =====
+function prevScenario() {
+  if (currentScenario > 0) {
+    currentScenario--;
+    selectedResponse = null;
+    customText = '';
+    renderScenario(currentScenario);
+    renderCoachingScenario(currentScenario);
+  }
+}
+
+// Navigation button (top bar) — renamed to avoid collision
+function goNextScenario() {
+  if (currentScenario < scenarios.length - 1) {
+    currentScenario++;
+    selectedResponse = null;
+    customText = '';
+    renderScenario(currentScenario);
+    renderCoachingScenario(currentScenario);
+  }
+}
+
+// ===== CUSTOM INPUT HANDLER =====
+function handleCustomInput(textarea) {
+  customText = textarea.value.trim();
+  if (customText.length > 0) {
+    textarea.classList.add('has-text');
+    document.querySelectorAll('.response-btn').forEach(btn => btn.classList.remove('selected'));
+    selectedResponse = 'custom';
+  } else {
+    textarea.classList.remove('has-text');
+    selectedResponse = null;
+  }
+}
+
+// ===== RESPONSE SELECTION =====
+function selectResponse(element, responseId) {
+  document.querySelectorAll('.response-btn').forEach(btn => btn.classList.remove('selected'));
+  element.classList.add('selected');
+  selectedResponse = responseId;
+  const customInput = document.getElementById('customInput');
+  if (customInput) {
+    customInput.value = '';
+    customInput.classList.remove('has-text');
+    customText = '';
+  }
+}
+
+// ===== CUSTOM RESPONSE ANALYSIS (FIX: negation-aware) =====
+function analyzeCustomResponse(text) {
+  const lower = text.toLowerCase();
+  let emotion = 50, empathy = 50, assertive = 50, safety = 50;
+
+  // Check for negation context before flagging aggressive words
+  const aggressiveWords = ['bodoh','goblok','jahat','benci','mati','hina','kampret','anjing','bangsat','tai'];
+  const negationPrefixes = ['jangan','jgn','bukan','tidak','ga ','gak ','nggak','biar ga','supaya ga'];
+  let aggCount = 0;
+  aggressiveWords.forEach(w => {
+    if (lower.includes(w)) {
+      const idx = lower.indexOf(w);
+      const context = lower.substring(Math.max(0, idx - 15), idx);
+      const negated = negationPrefixes.some(neg => context.includes(neg));
+      if (!negated) aggCount++;
+    }
+  });
+
+  const positiveWords = ['stop','henti','jangan','maaf','sayang','peduli','dukung','bantu','baik','tenang','keren','bagus','hebat'];
+  const empathyWords = ['kasian','sedih','maaf','paham','mengerti','support','dukung','semangat','kuat'];
+  const ignoreWords = ['diam','biarin','abaikan','cuek','biar','urusan'];
+  const supportWords = ['saya','aku','temen','teman','bareng','bantu','bantuin','ga apa','gapapa','tenang'];
+
+  const posCount = positiveWords.filter(w => lower.includes(w)).length;
+  const empCount = empathyWords.filter(w => lower.includes(w)).length;
+  const ignCount = ignoreWords.filter(w => lower.includes(w)).length;
+  const supCount = supportWords.filter(w => lower.includes(w)).length;
+
+  let feedback, title, subtitle, icon;
+
+  if (aggCount > 0) {
+    emotion = 30; empathy = 25; assertive = 55; safety = 40;
+    title = 'Hati-hati dengan Kata-kata!'; subtitle = 'Responsmu terlalu agresif'; icon = '⚠️';
+    feedback = 'Meskipun niatanmu baik untuk membela, menggunakan kata-kata kasar justru menurunkan kredibilitasmu. Coba tegaskan dengan bahasa yang lebih sopan namun tetap tegas.';
+  } else if (ignCount > 1 && text.length < 30) {
+    emotion = 65; empathy = 35; assertive = 25; safety = 60;
+    title = 'Bisa Lebih Baik'; subtitle = 'Diam bukan selalu emas'; icon = '🤔';
+    feedback = 'Mengabaikan kadang menghindari konflik, tetapi korban mungkin merasa tidak ada yang peduli. Coba tunjukkan dukunganmu meskipun dengan cara sederhana.';
+  } else if ((posCount >= 2 || empCount >= 1 || supCount >= 2) && text.length > 15) {
+    emotion = 88; empathy = 92; assertive = 82; safety = 78;
+    title = 'Respons Luar Biasa!'; subtitle = 'Kamu menunjukkan empati yang tinggi'; icon = '🎉';
+    feedback = 'Respons custommu sangat baik! Kamu menunjukkan empati dan keberanian untuk berbicara. Ini adalah contoh sempurna dari "upstander" — seseorang yang berani berdiri untuk yang benar dengan cara yang konstruktif.';
+  } else if (text.length < 10) {
+    emotion = 55; empathy = 40; assertive = 45; safety = 60;
+    title = 'Terlalu Singkat'; subtitle = 'Coba jelaskan lebih detail'; icon = '💡';
+    feedback = 'Responsmu terlalu singkat. Coba jelaskan dengan lebih detail mengapa perilaku tersebut salah dan bagaimana perasaan korban.';
+  } else {
+    emotion = 65; empathy = 55; assertive = 60; safety = 65;
+    title = 'Bagus, Tapi Bisa Ditingkatkan'; subtitle = 'Responsmu netral'; icon = '💡';
+    feedback = 'Responsmu tidak salah, tetapi coba tambahkan elemen empati untuk membuat korban merasa didukung. Misalnya dengan mengakui perasaan mereka atau menawarkan bantuan.';
+  }
+
+  return {emotion, empathy, assertive, safety, feedback, title, subtitle, icon};
+}
+
+// ===== SUBMIT RESPONSE =====
+function submitResponse() {
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (selectedResponse === 'custom' && customText.length > 0) {
+    showToast('📝 Menganalisis respons custom...');
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) typingIndicator.classList.add('show');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Mengirim...'; }
+
+    setTimeout(() => {
+      if (typingIndicator) typingIndicator.classList.remove('show');
+      const sentResponse = document.getElementById('sentResponse');
+      if (sentResponse) { sentResponse.textContent = customText; sentResponse.classList.add('show'); }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Kirim Respons ✅'; }
+      const analysis = analyzeCustomResponse(customText);
+      showCustomFeedback(analysis);
+    }, 1500);
+    return;
+  }
+
+  if (!selectedResponse) {
+    showToast('❗ Pilih respons atau tulis respons sendiri terlebih dahulu!');
+    return;
+  }
+
+  const typingIndicator = document.getElementById('typingIndicator');
+  if (typingIndicator) typingIndicator.classList.add('show');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Mengirim...'; }
+
+  setTimeout(() => {
+    if (typingIndicator) typingIndicator.classList.remove('show');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Kirim Respons ✅'; }
+    showFeedback(selectedResponse);
+  }, 1000);
+}
+
+// ===== SHOW FEEDBACK =====
+function showFeedback(responseId) {
+  const s = scenarios[currentScenario];
+  const option = s.options.find(o => o.id === responseId);
+  if (!option) return;
+
+  document.getElementById('feedbackIcon').textContent = option.icon;
+  document.getElementById('feedbackTitle').textContent = option.title;
+  document.getElementById('feedbackSubtitle').textContent = option.subtitle;
+  document.getElementById('feedbackExplanation').textContent = option.feedback;
+
+  setTimeout(() => {
+    document.getElementById('scoreEmotion').style.width = option.scores.emotion + '%';
+    document.getElementById('scoreEmotionValue').textContent = option.scores.emotion;
+    document.getElementById('scoreEmpathy').style.width = option.scores.empathy + '%';
+    document.getElementById('scoreEmpathyValue').textContent = option.scores.empathy;
+    document.getElementById('scoreAssertive').style.width = option.scores.assertive + '%';
+    document.getElementById('scoreAssertiveValue').textContent = option.scores.assertive;
+    document.getElementById('scoreSafety').style.width = option.scores.safety + '%';
+    document.getElementById('scoreSafetyValue').textContent = option.scores.safety;
+    document.getElementById('totalScore').textContent = Math.round((option.scores.emotion + option.scores.empathy + option.scores.assertive + option.scores.safety) / 4);
+  }, 300);
+
+  document.getElementById('feedbackOverlay').classList.add('show');
+
+  // FIX #3: only update stats if this scenario hasn't been completed yet
+  if (!completedScenarios.has(currentScenario)) {
+    completedScenarios.add(currentScenario);
+    updatePlayerStats(option.scores);
+    checkBadges(option.scores);
+  }
+}
+
+// ===== SHOW CUSTOM FEEDBACK =====
+function showCustomFeedback(analysis) {
+  document.getElementById('feedbackIcon').textContent = analysis.icon;
+  document.getElementById('feedbackTitle').textContent = analysis.title;
+  document.getElementById('feedbackSubtitle').textContent = analysis.subtitle;
+  document.getElementById('feedbackExplanation').textContent = analysis.feedback;
+
+  setTimeout(() => {
+    document.getElementById('scoreEmotion').style.width = analysis.emotion + '%';
+    document.getElementById('scoreEmotionValue').textContent = analysis.emotion;
+    document.getElementById('scoreEmpathy').style.width = analysis.empathy + '%';
+    document.getElementById('scoreEmpathyValue').textContent = analysis.empathy;
+    document.getElementById('scoreAssertive').style.width = analysis.assertive + '%';
+    document.getElementById('scoreAssertiveValue').textContent = analysis.assertive;
+    document.getElementById('scoreSafety').style.width = analysis.safety + '%';
+    document.getElementById('scoreSafetyValue').textContent = analysis.safety;
+    document.getElementById('totalScore').textContent = Math.round((analysis.emotion + analysis.empathy + analysis.assertive + analysis.safety) / 4);
+  }, 300);
+
+  document.getElementById('feedbackOverlay').classList.add('show');
+
+  // FIX #3: only reward XP once per scenario
+  if (!completedScenarios.has(currentScenario)) {
+    completedScenarios.add(currentScenario);
+    updatePlayerStats(analysis);
+    checkBadges(analysis);
+  }
+}
+
+// ===== UPDATE PLAYER STATS =====
+function updatePlayerStats(scores) {
+  const avgScore = (scores.emotion + scores.empathy + scores.assertive + scores.safety) / 4;
+  const xpGain = Math.round(avgScore / 5);
+
+  playerStats.xp += xpGain;
+  playerStats.eq = Math.min(100, playerStats.eq + Math.round(scores.emotion / 25));
+  playerStats.digital = Math.min(100, playerStats.digital + Math.round(scores.safety / 25));
+  playerStats.conflict = Math.min(100, playerStats.conflict + Math.round(scores.assertive / 25));
+
+  document.getElementById('eqStat').textContent = `EQ: ${playerStats.eq}`;
+  document.getElementById('digitalStat').textContent = `Digital: ${playerStats.digital}`;
+  document.getElementById('conflictStat').textContent = `Konflik: ${playerStats.conflict}`;
+  document.getElementById('xpStat').textContent = `XP: ${playerStats.xp}`;
+
+  if (playerStats.xp >= 300) {
+    playerStats.level++;
+    playerStats.xp = playerStats.xp - 300;
+    document.getElementById('levelBadge').textContent = `Level ${playerStats.level}`;
+    showToast(`🎉 Level Up! Kamu sekarang Level ${playerStats.level}!`);
+  }
+
+  updateProgressUI();
+}
+
+// ===== CHECK BADGES =====
+function checkBadges(scores) {
+  const avg = (scores.emotion + scores.empathy + scores.assertive + scores.safety) / 4;
+  if (avg >= 85 && !unlockedBadges.includes('upstander')) {
+    unlockedBadges.push('upstander');
+    showToast('🏆 Badge Baru: Upstander!');
+    renderBadges();
+  }
+  if (scores.safety >= 90 && !unlockedBadges.includes('guardian')) {
+    unlockedBadges.push('guardian');
+    showToast('🏆 Badge Baru: Digital Guardian!');
+    renderBadges();
+  }
+}
+
+// ===== RENDER BADGES (FIX: null-check) =====
+function renderBadges() {
+  const grid = document.getElementById('badgesGrid');
+  if (!grid) return;
+
+  const badges = [
+    {id:'calm',icon:'🧘',name:'Calm Responder'},
+    {id:'empathy',icon:'💙',name:'Empathy Hero'},
+    {id:'guardian',icon:'🛡️',name:'Digital Guardian'},
+    {id:'peace',icon:'🤝',name:'Peace Maker'},
+    {id:'speed',icon:'⚡',name:'Speed Thinker'},
+    {id:'upstander',icon:'🦸',name:'Upstander'}
+  ];
+
+  grid.innerHTML = badges.map(b => `
+    <div class="badge-item ${unlockedBadges.includes(b.id) ? 'unlocked' : ''}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>
+  `).join('');
+}
+
+// ===== UPDATE PROGRESS UI =====
+function updateProgressUI() {
+  document.getElementById('progressEQ').textContent = playerStats.eq;
+  document.getElementById('progressDigital').textContent = playerStats.digital;
+  document.getElementById('progressConflict').textContent = playerStats.conflict;
+  document.getElementById('progressLevel').textContent = playerStats.level;
+  document.getElementById('nextLevel').textContent = playerStats.level + 1;
+  document.getElementById('currentXP').textContent = playerStats.xp;
+  document.getElementById('xpBar').style.width = Math.min(100, (playerStats.xp / 300 * 100)) + '%';
+  document.getElementById('remainingScenarios').textContent = Math.max(0, 3 - Math.floor(playerStats.xp / 100));
+
+  const titles = ['🛡️ Pelindung Digital','💙 Duta Empati','⚔️ Master Konflik','🦸 Pahlawan Cyber','👑 Legenda Digital'];
+  document.getElementById('playerTitle').textContent = titles[Math.min(playerStats.level - 1, titles.length - 1)];
+
+  // Update completed scenarios list on progress page
+  const completedList = document.getElementById('completedList');
+  if (completedList) {
+    if (completedScenarios.size === 0) {
+      completedList.innerHTML = '<span style="color:#aaa">Belum ada skenario yang diselesaikan.</span>';
+    } else {
+      completedList.innerHTML = [...completedScenarios].sort((a,b)=>a-b).map(i =>
+        `✅ Skenario ${i+1}: <strong>${scenarios[i].title}</strong>`
+      ).join('<br>');
+    }
+  }
+}
+
+// ===== COACHING RESPONSE =====
+function submitCoachingResponse() {
+  if (!selectedResponse) {
+    showToast('❗ Pilih respons terlebih dahulu!');
+    return;
+  }
+  showFeedback(selectedResponse);
+}
+
+// ===== ADVANCE FROM FEEDBACK (FIX #1: renamed, separate from nav button) =====
+function advanceFromFeedback() {
+  document.getElementById('feedbackOverlay').classList.remove('show');
+  selectedResponse = null;
+  customText = '';
+
+  resetScoreBars();
+
+  if (currentScenario < scenarios.length - 1) {
+    currentScenario++;
+    renderScenario(currentScenario);
+    renderCoachingScenario(currentScenario);
+  } else {
+    showToast('🎉 Selamat! Kamu telah menyelesaikan semua skenario!');
+  }
+}
+
+// ===== RETRY =====
+function retryScenario() {
+  document.getElementById('feedbackOverlay').classList.remove('show');
+  selectedResponse = null;
+  customText = '';
+  renderScenario(currentScenario);
+  resetScoreBars();
+}
+
+function resetScoreBars() {
+  setTimeout(() => {
+    document.getElementById('scoreEmotion').style.width = '0%';
+    document.getElementById('scoreEmpathy').style.width = '0%';
+    document.getElementById('scoreAssertive').style.width = '0%';
+    document.getElementById('scoreSafety').style.width = '0%';
+  }, 300);
+}
+
+// ===== QUICK MODE (FIX: timer cleanup handled in switchMode) =====
+function startQuickMode() {
+  timeLeft = 15;
+  document.getElementById('timerContainer').classList.add('show');
+  document.getElementById('timerText').textContent = timeLeft;
+  document.getElementById('timerFill').style.width = '100%';
+
+  const quickScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+  document.getElementById('quickMode').innerHTML = `
+  <div class="scenario-card" style="margin-top:60px">
+    <div class="scenario-header">
+      <div class="platform-icon platform-${quickScenario.platform}">${quickScenario.platformIcon}</div>
+      <div class="scenario-info"><h3>⚡ ${quickScenario.title}</h3><p>Mode Cepat!</p></div>
+    </div>
+    <div class="chat-simulation">
+      ${quickScenario.messages.slice(0,2).map(m=>`<div class="chat-bubble ${m.type==='bully'?'bully':'received'}"><strong>${m.sender}:</strong> ${m.text}</div>`).join('')}
+    </div>
+    <div class="response-section">
+      <div class="response-options">
+        ${quickScenario.options.slice(0,3).map(opt=>`<button class="response-btn" onclick="quickResponse(this,'${opt.id}')">${opt.text}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // FIX: clear any existing interval before starting new one
+  if (timerInterval) clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerText').textContent = timeLeft;
+    document.getElementById('timerFill').style.width = (timeLeft / 15 * 100) + '%';
+    if (timeLeft <= 5) document.getElementById('timerFill').style.background = '#D0021B';
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('timerContainer').classList.remove('show');
+      showToast('⏰ Waktu habis! Coba lagi dengan lebih cepat.');
+      setTimeout(() => switchMode('quick', document.querySelectorAll('.mode-btn')[2]), 2000);
+    }
+  }, 1000);
+}
+
+function quickResponse(element, action) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timerContainer').classList.remove('show');
+  showFeedback(action);
+}
+
+// ===== SCREENSHOT MODE =====
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('screenshotPreview');
+    const upload = document.getElementById('screenshotUpload');
+    preview.src = e.target.result;
+    preview.classList.add('show');
+    upload.classList.add('has-image');
+    document.getElementById('uploadIcon').textContent = '✅';
+    document.getElementById('uploadTitle').textContent = 'Screenshot Berhasil Diupload!';
+    document.getElementById('uploadDesc').textContent = file.name;
+    screenshotUploaded = true;
+    showToast('📸 Screenshot berhasil diupload!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadExampleImage(type) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400; canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fillRect(0,0,400,300);
+  ctx.fillStyle = type==='chat'?'#E3F2FD':type==='ig'?'#FCE4EC':'#F3E5F5';
+  ctx.fillRect(0,0,400,60);
+  ctx.fillStyle = '#333'; ctx.font = 'bold 20px Arial';
+  ctx.fillText(type==='chat'?'💬 Chat Grup':type==='ig'?'📷 Instagram':'📱 DM Pribadi', 20, 35);
+  ctx.fillStyle = '#fff'; ctx.fillRect(20,80,360,50);
+  ctx.fillStyle = '#333'; ctx.font = '14px Arial';
+  ctx.fillText('Pesan jahat dari anonim...', 30, 110);
+  ctx.fillStyle = '#ffebee'; ctx.fillRect(20,150,360,50);
+  ctx.fillStyle = '#c62828'; ctx.fillText('Komentar bullying terdeteksi!', 30, 180);
+  ctx.fillStyle = '#fff'; ctx.fillRect(20,220,360,50);
+  ctx.fillStyle = '#333'; ctx.fillText('Ancaman dan ejekan...', 30, 250);
+
+  const preview = document.getElementById('screenshotPreview');
+  const upload = document.getElementById('screenshotUpload');
+  preview.src = canvas.toDataURL();
+  preview.classList.add('show');
+  upload.classList.add('has-image');
+  document.getElementById('uploadIcon').textContent = '✅';
+  document.getElementById('uploadTitle').textContent = 'Contoh Screenshot Dimuat!';
+  document.getElementById('uploadDesc').textContent = 'Klik "Analisis Tindakan" untuk melanjutkan';
+  screenshotUploaded = true;
+  showToast('📸 Contoh screenshot dimuat!');
+}
+
+function selectScreenshotAction(element, action) {
+  document.querySelectorAll('.screenshot-action-btn').forEach(btn => btn.classList.remove('selected'));
+  element.classList.add('selected');
+  screenshotActionSelected = action;
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+function analyzeScreenshotAction() {
+  if (!screenshotUploaded) { showToast('❗ Upload screenshot terlebih dahulu!'); return; }
+  if (!screenshotActionSelected) { showToast('❗ Pilih tindakan terlebih dahulu!'); return; }
+
+  const explanations = {
+    ignore:'Mengabaikan bisa membuat pelaku merasa aman. Untuk kasus ringan, ini bisa jadi pilihan. Tapi untuk bullying berat, korban butuh dukungan.',
+    report:'Melaporkan adalah langkah yang bertanggung jawab! Ini melindungimu dan orang lain dari konten berbahaya. Platform akan meninjau dan menghapus konten tersebut.',
+    respond:'Merespons bisa membantu jika dilakukan dengan bijak. Tapi hati-hati dengan emosi! Pastikan responsmu konstruktif, bukan memperpanjang konflik.',
+    block:'Memblokir melindungimu dari kontak lebih lanjut. Kombinasikan dengan lapor untuk hasil terbaik. Jangan biarkan pelaku mengganggu terus!'
+  };
+  const scores = {ignore:{score:40,xp:10},report:{score:95,xp:25},respond:{score:70,xp:15},block:{score:85,xp:20}};
+  const result = document.getElementById('screenshotAnalysisResult');
+  document.getElementById('analysisText').textContent = explanations[screenshotActionSelected];
+  document.getElementById('analysisScore').textContent = `+${scores[screenshotActionSelected].xp} XP`;
+  result.classList.add('show');
+  setTimeout(() => { document.getElementById('analysisBar').style.width = scores[screenshotActionSelected].score + '%'; }, 300);
+
+  playerStats.xp += scores[screenshotActionSelected].xp;
+  playerStats.digital = Math.min(100, playerStats.digital + 5);
+  document.getElementById('xpStat').textContent = `XP: ${playerStats.xp}`;
+  document.getElementById('digitalStat').textContent = `Digital: ${playerStats.digital}`;
+  updateProgressUI();
+  showToast(`🎯 Analisis selesai! +${scores[screenshotActionSelected].xp} XP`);
+}
+
+// ===== PROGRESS PAGE =====
+function showProgress() {
+  document.getElementById('storyMode').style.display = 'none';
+  document.getElementById('coachingMode').style.display = 'none';
+  document.getElementById('quickMode').style.display = 'none';
+  document.getElementById('screenshotMode').style.display = 'none';
+  document.getElementById('progressPage').classList.add('active');
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  renderBadges();
+  updateProgressUI();
+}
+
+function backToGame() {
+  document.getElementById('progressPage').classList.remove('active');
+  document.getElementById('storyMode').style.display = 'block';
+  document.querySelectorAll('.mode-btn')[0].classList.add('active');
+}
+
+// ===== TOAST =====
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
